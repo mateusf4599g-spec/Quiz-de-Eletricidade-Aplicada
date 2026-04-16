@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Quiz de Eletricidade Aplicada</title>
+
+<style>
+/* ==========================
+   ESTILO GERAL
+========================== */
+body{
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  margin:0;
+  padding:15px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container{
+  background:#1e293b;
+  padding:25px;
+  border-radius:12px;
+  width:95%;
+  max-width:600px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+h1,h2{text-align:center;}
+
+/* BOTÕES DE MATÉRIA/ASSUNTO */
+.temaBtn{
+  background:#111827;
+  padding:16px;
+  margin:10px 0;
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
+  font-size:22px;
+  border:3px solid #1f2937;
+  user-select:none;
+  touch-action:manipulation;
+}
+
+.selecionadaMenu{
+  background:#1d4ed8 !important;
+  border:3px solid #60a5fa !important;
+}
+
+/* BARRA DE PROGRESSO DO ASSUNTO */
+.progressoAssunto{
+  height:8px;
+  background:#1f2937;
+  border-radius:6px;
+  margin-top:6px;
+}
+
+.barraInterna{
+  height:8px;
+  background:#22c55e;
+  border-radius:6px;
+}
+
+/* PERGUNTAS E OPÇÕES */
+.pergunta{
+  font-size:24px;
+  margin-bottom:20px;
+}
+
+.opcao{
+  background:#111827;
+  padding:16px;
+  margin:10px 0;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:20px;
+  border:3px solid #1f2937;
+}
+
+.selecionada{background:#1d4ed8 !important;border:3px solid #60a5fa !important;}
+.correta{background:#16a34a !important;border:3px solid #4ade80;}
+.errada{background:#dc2626 !important;border:3px solid #f87171;}
+
+/* BOTOES GERAIS */
+button{
+  margin-top:30px;
+  padding:14px;
+  width:100%;
+  border:none;
+  background:#2563eb;
+  color:white;
+  border-radius:8px;
+  font-size:18px;
+  cursor:pointer;
+}
+
+/* INPUT PARA NOME */
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  margin-top:10px;
+  font-size:18px;
+}
+
+/* BARRA DE PROGRESSO GERAL DO QUIZ */
+#barra{
+  height:12px;
+  background:#1f2937;
+  border-radius:10px;
+  margin-bottom:20px;
+  overflow:hidden;
+}
+
+#progresso{
+  height:12px;
+  background:#3b82f6;
+  width:0%;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="container" id="login">
+<h1>Quiz de Eletricidade Aplicada</h1>
+<p>Digite seu nome para salvar seu progresso</p>
+<input id="nomeUsuario" placeholder="Seu nome">
+<button id="btnEntrar">Entrar</button>
+</div>
+
+<!-- MENU DE MATÉRIAS -->
+<div class="container" id="menu" style="display:none"></div>
+
+<!-- TELA DE QUIZ -->
+<div class="container" id="quiz" style="display:none">
+
+
+<h1>Quiz de Eletricidade Aplicada</h1>
+
+<div id="barra"><div id="progresso"></div></div>
+<div id="placar"></div>
+<div id="tema"></div>
+<div class="pergunta" id="pergunta"></div>
+
+<div class="opcao" id="op0"></div>
+<div class="opcao" id="op1"></div>
+<div class="opcao" id="op2"></div>
+<div class="opcao" id="op3"></div>
+
+<div id="explicacao"></div>
+
+<button id="btnConfirmar">Confirmar</button>
+<button id="btnProxima" style="display:none">Próxima</button>
+<button id="btnVoltar">Voltar</button>
+</div>
+
+<script>
+// ==========================
+// CONFIGURAÇÕES E VARIÁVEIS
+// ==========================
+const QUIZ_ID = "Quiz de Eletricidade Aplicada" // ID único do quiz
+let usuario=""
+let materiaSelecionada=null
+let assuntoSelecionado=null
+let opcaoSelecionada=null
+let perguntas=[]
+let atual=0
+let pontos=0
+let respondido=false
+let erros=[]
+
+// ==========================
+// BANCO DE PERGUNTAS
+
+let banco=[
+
+
+
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"O que caracteriza um material condutor de eletricidade?","opcoes":["Permite a movimentação de cargas elétricas com baixa resistência","Apresenta ausência total de resistência elétrica","Armazena cargas elétricas sem permitir fluxo","Bloqueia completamente qualquer movimento de elétrons"],"correta":0,"explicacao":"Condutores permitem o movimento de cargas elétricas com baixa resistência, devido à presença de elétrons livres."},
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"Em uma instalação elétrica residencial, por que se utiliza cobre na fiação interna dos circuitos?","opcoes":["Porque possui alta resistência elétrica e evita perdas","Porque apresenta baixa resistividade e boa condutividade","Porque impede a passagem de corrente em situações de sobrecarga","Porque funciona como isolante em baixas tensões"],"correta":1,"explicacao":"O cobre é utilizado por possuir baixa resistividade, permitindo melhor condução da corrente elétrica."},
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"Em um experimento, dois materiais são testados em um circuito: um permite passagem de corrente com pequena queda de tensão e o outro praticamente impede o fluxo. Como esses materiais podem ser classificados?","opcoes":["Ambos são condutores, porém com diferentes níveis de resistência","O primeiro é isolante e o segundo é condutor","Ambos são isolantes com diferentes capacidades térmicas","O primeiro é semicondutor e o segundo é gerador"],"correta":0,"explicacao":"Condutores podem apresentar diferentes resistências elétricas, mas ainda permitem passagem de corrente."},
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"Por que materiais isolantes são essenciais no revestimento de cabos de transmissão de energia?","opcoes":["Para reduzir a corrente elétrica no interior do condutor","Para evitar fuga de corrente e contato elétrico com o meio externo","Para aumentar a velocidade de propagação da corrente","Para transformar energia elétrica em energia térmica controlada"],"correta":1,"explicacao":"Isolantes evitam contato direto com a corrente elétrica e impedem fugas de energia e choques."},
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"Qual das situações abaixo descreve corretamente o comportamento de um isolante em um campo elétrico intenso?","opcoes":["Permite fluxo livre de elétrons como em metais","Pode sofrer polarização, mas não conduz corrente significativa","Transforma-se automaticamente em condutor metálico","Amplifica a corrente elétrica aplicada"],"correta":1,"explicacao":"Isolantes não conduzem corrente, mas podem sofrer polarização quando submetidos a campos elétricos."},
+{"materia":"Eletricidade Aplicada","assunto":"Condutores e Isolantes","pergunta":"Em termos microscópicos, o que diferencia um bom condutor de um isolante elétrico?","opcoes":["A quantidade de prótons no núcleo atômico","A disponibilidade de elétrons livres para movimentação","A temperatura de fusão do material","A densidade do material"],"correta":1,"explicacao":"Condutores possuem muitos elétrons livres, enquanto isolantes possuem elétrons fortemente ligados aos átomos."},
+
+{"materia":"Eletricidade Aplicada","assunto":"Corrente elétrica","pergunta":"O que é corrente elétrica?","opcoes":["Quantidade de carga elétrica acumulada","Diferença de potencial entre dois pontos","Movimento ordenado de cargas elétricas","Resistência oferecida ao fluxo de elétrons"],"correta":2,"explicacao":"Corrente elétrica é o fluxo ordenado de cargas elétricas em um condutor."},
+{"materia":"Eletricidade Aplicada","assunto":"Corrente elétrica","pergunta":"Qual grandeza física define a corrente elétrica em um condutor?","opcoes":["Energia por unidade de tempo","Taxa de fluxo de carga elétrica por unidade de tempo","Diferença de potencial entre dois pontos","Capacidade de armazenamento de cargas"],"correta":1,"explicacao":"A corrente elétrica é definida como a quantidade de carga elétrica que atravessa um condutor por unidade de tempo (I = Q/Δt)."},
+{"materia":"Eletricidade Aplicada","assunto":"Corrente elétrica","pergunta":"Em um condutor metálico, a corrente elétrica em regime estacionário é melhor descrita como:","opcoes":["Fluxo de elétrons livres orientado pelo campo elétrico","Movimento de prótons através do material","Acúmulo de cargas na superfície sem movimento interno","Conversão de energia elétrica em massa"],"correta":0,"explicacao":"Nos metais, a corrente elétrica é causada pelo movimento orientado de elétrons livres sob ação de um campo elétrico."},
+{"materia":"Eletricidade Aplicada","assunto":"Corrente elétrica","pergunta":"O que caracteriza a corrente elétrica contínua (CC) em relação ao sentido do fluxo de cargas?","opcoes":["Alternância periódica de sentido","Ausência total de movimento de cargas","Fluxo aleatório sem direção definida","Movimento de cargas em um único sentido ao longo do tempo"],"correta":3,"explicacao":"Na corrente contínua, o fluxo de cargas ocorre sempre no mesmo sentido."},
+{"materia":"Eletricidade Aplicada","assunto":"Corrente elétrica","pergunta":"Ao aumentar a resistência elétrica em um circuito com tensão constante, o que ocorre com a corrente elétrica segundo a Lei de Ohm?","opcoes":["A corrente aumenta proporcionalmente","A tensão diminui automaticamente","A corrente elétrica diminui devido à relação inversa I = V/R","A corrente se torna independente da resistência"],"correta":2,"explicacao":"Pela Lei de Ohm (I = V/R), aumentando a resistência, a corrente diminui se a tensão permanecer constante."},
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Tensão elétrica",
+    "pergunta": "A tensão elétrica em um resistor ôhmico, no regime de corrente contínua, é expressa por qual relação fundamental entre as grandezas elétricas?",
+    "opcoes": ["V = I/R", "V = R·I²", "V = I·R", "V = Q/I"],
+    "correta": 2,
+    "explicacao": "Em um resistor ôhmico, a tensão é proporcional à corrente elétrica e à resistência, sendo dada pela Lei de Ohm: V = I·R."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Tensão elétrica",
+    "pergunta": "Em um circuito puramente resistivo, qual expressão representa corretamente a relação entre tensão, corrente e resistência elétrica?",
+    "opcoes": ["I = V·R", "V = I·R", "V = R/I", "P = R·I²"],
+    "correta": 1,
+    "explicacao": "A Lei de Ohm estabelece que a tensão é o produto da corrente pela resistência: V = I·R."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Tensão elétrica",
+    "pergunta": "Do ponto de vista energético, a tensão elétrica é corretamente definida como:",
+    "opcoes": ["Quantidade de carga por unidade de energia", "Energia elétrica por unidade de carga", "Energia total armazenada no circuito", "Taxa de variação da corrente elétrica"],
+    "correta": 1,
+    "explicacao": "A tensão elétrica é definida como a energia elétrica por unidade de carga: V = E/Q."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Tensão elétrica",
+    "pergunta": "Qual expressão relaciona corretamente a potência elétrica com tensão e corrente em um circuito?",
+    "opcoes": ["P = V/I", "P = I/V", "P = V + I", "P = V·I"],
+    "correta": 3,
+    "explicacao": "A potência elétrica em circuitos é dada pelo produto da tensão pela corrente: P = V·I."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Tensão elétrica",
+    "pergunta": "Em um campo elétrico uniforme, qual relação correta descreve a diferença de potencial entre dois pontos separados por uma distância d?",
+    "opcoes": ["V = d/E", "V = E/d", "V = E·d", "V = E + d"],
+    "correta": 2,
+    "explicacao": "Em um campo elétrico uniforme, a diferença de potencial é dada pelo produto do campo elétrico pela distância: V = E·d."
+  },
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Níveis de tensão",
+    "pergunta": "Qual dos valores abaixo representa alta tensão em sistemas elétricos de potência?",
+    "opcoes": ["127 V", "220 V", "13.800 V", "5 V"],
+    "correta": 2,
+    "explicacao": "Tensões na ordem de quilovolts (kV), como 13.800 V, são classificadas como alta tensão em sistemas de distribuição e transmissão."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Níveis de tensão",
+    "pergunta": "Em sistemas de distribuição de energia no Brasil, qual faixa é mais comumente associada à baixa tensão residencial?",
+    "opcoes": ["127 V a 220 V", "1 kV a 13,8 kV", "34,5 kV a 69 kV", "Acima de 69 kV"],
+    "correta": 0,
+    "explicacao": "Baixa tensão em residências corresponde geralmente a níveis como 127 V e 220 V."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Níveis de tensão",
+    "pergunta": "Qual faixa de tensão é tipicamente classificada como média tensão em sistemas elétricos de distribuição?",
+    "opcoes": ["127 V a 220 V", "1 kV a 34,5 kV", "Acima de 230 kV", "5 V a 24 V"],
+    "correta": 1,
+    "explicacao": "Média tensão geralmente abrange valores entre aproximadamente 1 kV e 34,5 kV em redes de distribuição."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Níveis de tensão",
+    "pergunta": "Qual situação abaixo exige o uso de alta tensão para garantir eficiência no transporte de energia elétrica?",
+    "opcoes": [
+      "Alimentação de dispositivos eletrônicos portáteis",
+      "Rede residencial urbana de 127/220 V",
+      "Subestação de distribuição secundária em bairro urbano",
+      "Transmissão de energia em longas distâncias entre regiões"
+    ],
+    "correta": 3,
+    "explicacao": "A alta tensão é usada na transmissão de longa distância para reduzir perdas e aumentar a eficiência do sistema elétrico."
+  },
+  
+{
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Níveis de tensão",
+    "pergunta": "Por que as linhas de transmissão utilizam níveis elevados de tensão elétrica?",
+    "opcoes": [
+      "Para aumentar a resistência dos cabos e limitar a corrente",
+      "Para reduzir a potência gerada nas usinas",
+      "Para diminuir perdas por efeito Joule ao reduzir a corrente elétrica",
+      "Para aumentar o consumo de energia pelos equipamentos"
+    ],
+    "correta": 2,
+    "explicacao": "Ao elevar a tensão, a corrente diminui para a mesma potência, reduzindo perdas por efeito Joule nas linhas de transmissão."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Potência e energia",
+    "pergunta": "Qual é a relação entre potência e energia elétrica?",
+    "opcoes": ["P = E/t", "P = E·t", "P = V/I", "P = R·I"],
+    "correta": 0,
+    "explicacao": "A potência elétrica é a taxa de consumo de energia ao longo do tempo, dada por P = E/t."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Potência e energia",
+    "pergunta": "Qual expressão relaciona corretamente a energia elétrica consumida em função da potência e do tempo de uso?",
+    "opcoes": ["E = P/t", "E = V·I", "E = P·t", "E = R/I"],
+    "correta": 2,
+    "explicacao": "A energia elétrica é o produto da potência pelo tempo de utilização: E = P·t."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Potência e energia",
+    "pergunta": "Em um circuito elétrico em corrente contínua, qual expressão representa corretamente a potência elétrica dissipada em um resistor?",
+    "opcoes": ["P = I²·R", "P = V·I", "P = V/R", "P = R/I"],
+    "correta": 1,
+    "explicacao": "A potência elétrica pode ser expressa como o produto da tensão pela corrente: P = V·I."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Potência e energia",
+    "pergunta": "Por que sistemas de transmissão de energia utilizam alta tensão para transportar energia elétrica a longas distâncias?",
+    "opcoes": [
+      "Para aumentar a corrente elétrica no sistema",
+      "Para aumentar as perdas por efeito Joule",
+      "Para reduzir a resistência dos cabos",
+      "Para reduzir a corrente elétrica e minimizar perdas por efeito Joule"
+    ],
+    "correta": 3,
+    "explicacao": "Ao aumentar a tensão, a corrente diminui para a mesma potência, reduzindo perdas por aquecimento nos cabos."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Potência e energia",
+    "pergunta": "Qual unidade é mais utilizada para medir o consumo de energia elétrica em residências?",
+    "opcoes": ["Watt", "kWh", "Volt", "Ampere"],
+    "correta": 1,
+    "explicacao": "O consumo de energia elétrica em residências é geralmente medido em quilowatt-hora (kWh)."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aparelhos de medição",
+    "pergunta": "Qual aparelho é utilizado para medir a intensidade da corrente elétrica em um circuito, devendo ser conectado em série com o elemento analisado?",
+    "opcoes": ["Voltímetro", "Ohmímetro", "Wattímetro", "Amperímetro"],
+    "correta": 3,
+    "explicacao": "O amperímetro é o instrumento usado para medir corrente elétrica e deve ser ligado em série no circuito."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aparelhos de medição",
+    "pergunta": "Qual instrumento é mais adequado para medir a diferença de potencial entre dois pontos de um circuito elétrico?",
+    "opcoes": ["Amperímetro", "Ohmímetro", "Voltímetro", "Wattímetro"],
+    "correta": 2,
+    "explicacao": "O voltímetro mede a diferença de potencial (tensão) entre dois pontos e é ligado em paralelo no circuito."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aparelhos de medição",
+    "pergunta": "Em um sistema elétrico, qual equipamento é utilizado para medir a potência elétrica consumida por um dispositivo em operação?",
+    "opcoes": ["Ohmímetro", "Voltímetro", "Amperímetro", "Wattímetro"],
+    "correta": 3,
+    "explicacao": "O wattímetro mede a potência elétrica em um circuito, considerando tensão e corrente simultaneamente."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aparelhos de medição",
+    "pergunta": "Qual instrumento é utilizado principalmente para medir a resistência elétrica de um componente quando ele não está energizado?",
+    "opcoes": ["Wattímetro", "Ohmímetro", "Voltímetro", "Amperímetro"],
+    "correta": 1,
+    "explicacao": "O ohmímetro mede a resistência elétrica de um componente, geralmente fora de operação."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aparelhos de medição",
+    "pergunta": "Em uma instalação elétrica, qual combinação descreve corretamente o uso dos instrumentos de medição para tensão, corrente e potência, respectivamente?",
+    "opcoes": ["Amperímetro, Voltímetro, Ohmímetro", "Voltímetro, Ohmímetro, Wattímetro", "Voltímetro, Amperímetro, Wattímetro", "Ohmímetro, Wattímetro, Voltímetro"],
+    "correta": 2,
+    "explicacao": "Tensão é medida com voltímetro, corrente com amperímetro e potência com wattímetro."
+  },
+
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Pilhas e baterias",
+    "pergunta": "Qual a função das pilhas e baterias no contexto de circuitos elétricos portáteis?",
+    "opcoes": [
+      "Transformar energia elétrica em energia mecânica por indução",
+      "Transformar energia química armazenada em energia elétrica disponível no circuito",
+      "Armazenar energia térmica para posterior liberação elétrica",
+      "Produzir energia nuclear por reações internas controladas"
+    ],
+    "correta": 1,
+    "explicacao": "Pilhas e baterias convertem energia química em energia elétrica por meio de reações eletroquímicas."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Pilhas e baterias",
+    "pergunta": "Durante o funcionamento de uma pilha, qual processo físico-químico é responsável pela geração de corrente elétrica?",
+    "opcoes": [
+      "Movimento de íons e elétrons devido a reações de oxirredução internas",
+      "Conversão direta de energia térmica em elétrica por convecção",
+      "Acúmulo de energia mecânica em placas metálicas em repouso",
+      "Transformação de energia luminosa em energia elétrica por reflexão"
+    ],
+    "correta": 0,
+    "explicacao": "As pilhas funcionam através de reações de oxirredução que provocam fluxo de elétrons e íons, gerando corrente elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Pilhas e baterias",
+    "pergunta": "Qual é a principal característica que diferencia uma bateria recarregável de uma pilha comum?",
+    "opcoes": [
+      "Capacidade de gerar energia mecânica adicional",
+      "Possibilidade de reversão das reações químicas durante a recarga",
+      "Produção contínua de energia nuclear em baixa escala",
+      "Funcionamento exclusivo em corrente alternada"
+    ],
+    "correta": 1,
+    "explicacao": "Baterias recarregáveis permitem a reversão das reações químicas, possibilitando múltiplos ciclos de carga e descarga."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Pilhas e baterias",
+    "pergunta": "Em termos de funcionamento elétrico, o que ocorre quando várias pilhas são associadas em série?",
+    "opcoes": [
+      "A corrente total aumenta enquanto a tensão diminui",
+      "A tensão total aumenta enquanto a corrente se mantém a mesma",
+      "A resistência total diminui e a corrente zera",
+      "A energia é transformada em calor sem alteração de tensão"
+    ],
+    "correta": 1,
+    "explicacao": "Em associação em série, as tensões das pilhas se somam, enquanto a corrente permanece a mesma em todo o circuito."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Pilhas e baterias",
+    "pergunta": "Qual alternativa descreve corretamente o papel dos eletrodos dentro de uma pilha eletroquímica?",
+    "opcoes": [
+      "São responsáveis por armazenar energia térmica gerada no circuito",
+      "Atuam como isolantes que impedem o fluxo de elétrons",
+      "Permitem a ocorrência de reações químicas que liberam elétrons para o circuito externo",
+      "Convertem diretamente energia mecânica em energia elétrica contínua"
+    ],
+    "correta": 2,
+    "explicacao": "Os eletrodos são os locais onde ocorrem reações de oxirredução, liberando elétrons que alimentam o circuito externo."
+  },
+
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia solar",
+    "pergunta": "Qual efeito físico é responsável pela conversão direta da radiação solar em energia elétrica em células fotovoltaicas?",
+    "opcoes": [
+      "Efeito fotoelétrico interno em materiais semicondutores",
+      "Efeito Joule causado pelo aquecimento do material",
+      "Efeito Doppler na frequência da luz incidente",
+      "Efeito térmico de dilatação dos elétrons livres"
+    ],
+    "correta": 0,
+    "explicacao": "O funcionamento das células fotovoltaicas está associado ao efeito fotoelétrico interno em semicondutores, onde a luz gera pares elétron-lacuna."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia solar",
+    "pergunta": "Em um painel fotovoltaico de silício, o que ocorre quando fótons de energia adequada atingem a junção p-n?",
+    "opcoes": [
+      "Não há geração de portadores de carga, ocorrendo apenas dissipação térmica",
+      "O material bloqueia totalmente a passagem de elétrons devido à barreira de potencial",
+      "São gerados pares elétron-lacuna que contribuem para a corrente elétrica",
+      "O material entra em ressonância óptica e amplifica a luz incidente"
+    ],
+    "correta": 2,
+    "explicacao": "A absorção de fótons com energia suficiente gera pares elétron-lacuna na junção p-n, permitindo a geração de corrente elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia solar",
+    "pergunta": "Qual fator influencia diretamente a eficiência de um painel solar fotovoltaico em operação real?",
+    "opcoes": [
+      "A cor do suporte mecânico da estrutura",
+      "A intensidade da radiação solar e a temperatura de operação",
+      "A frequência sonora do ambiente ao redor",
+      "A resistência mecânica do vidro apenas"
+    ],
+    "correta": 1,
+    "explicacao": "A eficiência depende principalmente da irradiância solar e da temperatura de operação, que afeta o comportamento dos semicondutores."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia solar",
+    "pergunta": "Por que sistemas fotovoltaicos utilizam inversores na conexão com a rede elétrica?",
+    "opcoes": [
+      "Para transformar corrente alternada em corrente contínua para armazenamento",
+      "Para aumentar diretamente a radiação solar incidente",
+      "Para converter corrente contínua gerada em corrente alternada compatível com a rede",
+      "Para reduzir o efeito fotoelétrico nas células solares"
+    ],
+    "correta": 2,
+    "explicacao": "Os inversores convertem a corrente contínua gerada pelos painéis em corrente alternada compatível com a rede elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia solar",
+    "pergunta": "Em um sistema fotovoltaico isolado, qual é a função principal do controlador de carga?",
+    "opcoes": [
+      "Converter energia mecânica em energia elétrica",
+      "Regular a tensão e corrente para proteger as baterias contra sobrecarga e descarga profunda",
+      "Aumentar a potência dos painéis por amplificação de sinal",
+      "Transformar corrente alternada em corrente contínua de alta frequência"
+    ],
+    "correta": 1,
+    "explicacao": "O controlador de carga regula o fluxo de energia entre painel e bateria, evitando danos por sobrecarga e descarga excessiva."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Hidrelétricas",
+    "pergunta": "O que caracteriza uma central hidrelétrica no contexto da geração de energia elétrica?",
+    "opcoes": [
+      "Uso de vento em aerogeradores para indução eletromagnética",
+      "Uso da energia térmica de combustíveis fósseis para produção de vapor",
+      "Conversão da energia potencial e cinética da água em energia elétrica por turbinas",
+      "Conversão direta de energia solar em corrente elétrica por efeito fotoelétrico"
+    ],
+    "correta": 2,
+    "explicacao": "As hidrelétricas utilizam a energia da água em movimento para girar turbinas acopladas a geradores elétricos."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Hidrelétricas",
+    "pergunta": "Em uma usina hidrelétrica, qual componente é responsável pela conversão da energia mecânica da turbina em energia elétrica?",
+    "opcoes": [
+      "Transformador elevador de tensão",
+      "Gerador síncrono acoplado ao eixo da turbina",
+      "Reservatório de água",
+      "Barragem de contenção"
+    ],
+    "correta": 1,
+    "explicacao": "O gerador síncrono converte a energia mecânica da rotação da turbina em energia elétrica por indução eletromagnética."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Hidrelétricas",
+    "pergunta": "Qual fator é mais determinante para a potência gerada por uma usina hidrelétrica?",
+    "opcoes": [
+      "A cor da água do reservatório",
+      "A altura da queda d’água e a vazão do rio",
+      "A temperatura média do ambiente",
+      "A resistência elétrica dos cabos de transmissão"
+    ],
+    "correta": 1,
+    "explicacao": "A potência depende principalmente da vazão de água e da altura da queda (desnível hidráulico)."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Hidrelétricas",
+    "pergunta": "Por que usinas hidrelétricas geralmente estão localizadas em regiões com grande desnível geográfico?",
+    "opcoes": [
+      "Para reduzir a necessidade de transformadores",
+      "Para aumentar a energia potencial gravitacional da água disponível",
+      "Para diminuir a resistência elétrica da rede",
+      "Para evitar perdas por efeito Joule nos cabos"
+    ],
+    "correta": 1,
+    "explicacao": "Quanto maior o desnível, maior a energia potencial da água, aumentando a eficiência da geração elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Hidrelétricas",
+    "pergunta": "Qual elemento abaixo NÃO faz parte diretamente do processo de geração de energia em uma usina hidrelétrica?",
+    "opcoes": [
+      "Turbina hidráulica",
+      "Gerador elétrico",
+      "Painel fotovoltaico",
+      "Reservatório de água"
+    ],
+    "correta": 2,
+    "explicacao": "Painéis fotovoltaicos pertencem à geração solar, não fazem parte de sistemas hidrelétricos."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Geradores",
+    "pergunta": "Qual princípio físico é fundamental para o funcionamento de um gerador elétrico em usinas de geração de energia?",
+    "opcoes": [
+      "Conversão de energia térmica em energia elétrica por aquecimento resistivo",
+      "Acúmulo de cargas elétricas em um campo eletrostático isolado",
+      "Indução eletromagnética devido à variação do fluxo magnético",
+      "Dissipação de energia elétrica em forma de calor nos condutores"
+    ],
+    "correta": 2,
+    "explicacao": "O funcionamento dos geradores elétricos baseia-se na indução eletromagnética, onde a variação do fluxo magnético induz corrente elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Geradores",
+    "pergunta": "Em um gerador síncrono, qual elemento é responsável por criar o campo magnético necessário para a indução de corrente no estator?",
+    "opcoes": [
+      "O eixo mecânico da turbina sem excitação elétrica",
+      "O rotor excitado magneticamente ou por corrente contínua",
+      "O sistema de transmissão de energia externa",
+      "O enrolamento de carga conectado à rede"
+    ],
+    "correta": 1,
+    "explicacao": "O rotor do gerador síncrono, ao ser excitado, cria o campo magnético que induz tensão no estator."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Geradores",
+    "pergunta": "O que ocorre quando há variação do fluxo magnético em uma bobina condutora dentro de um campo magnético?",
+    "opcoes": [
+      "Geração de corrente elétrica induzida na bobina",
+      "Aumento apenas da resistência elétrica do circuito",
+      "Bloqueio total da movimentação de elétrons",
+      "Conversão direta de energia elétrica em energia mecânica sem corrente"
+    ],
+    "correta": 0,
+    "explicacao": "A variação do fluxo magnético induz uma força eletromotriz, gerando corrente elétrica na bobina."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Geradores",
+    "pergunta": "Por que a rotação do rotor é essencial para a geração de energia elétrica em um gerador?",
+    "opcoes": [
+      "Porque aumenta a resistência elétrica do circuito",
+      "Porque mantém constante o fluxo magnético sem variação",
+      "Porque gera variação do fluxo magnético no estator",
+      "Porque transforma energia elétrica diretamente em calor útil"
+    ],
+    "correta": 2,
+    "explicacao": "A rotação do rotor altera o fluxo magnético no estator, o que é necessário para induzir corrente elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Geradores",
+    "pergunta": "Em qual condição a tensão induzida em um gerador tende a aumentar?",
+    "opcoes": [
+      "Quando há redução da velocidade de rotação do rotor",
+      "Quando o fluxo magnético varia mais rapidamente no tempo",
+      "Quando a resistência elétrica do circuito aumenta",
+      "Quando o sistema opera em corrente contínua constante"
+    ],
+    "correta": 1,
+    "explicacao": "Quanto maior a variação do fluxo magnético por unidade de tempo, maior a tensão induzida (Lei de Faraday)."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Subestações",
+    "pergunta": "Qual é a função principal de uma subestação em um sistema elétrico de potência?",
+    "opcoes": [
+      "Gerar energia elétrica por meio de turbinas e geradores síncronos",
+      "Armazenar energia elétrica em grandes bancos de capacitores industriais",
+      "Interromper completamente o fluxo de corrente para proteção do sistema",
+      "Modificar níveis de tensão para adequação entre transmissão e distribuição"
+    ],
+    "correta": 3,
+    "explicacao": "Subestações são responsáveis por transformar níveis de tensão, permitindo transmissão eficiente e distribuição segura de energia elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Subestações",
+    "pergunta": "Em uma subestação elevadora, qual é o principal objetivo operacional ao elevar a tensão elétrica?",
+    "opcoes": [
+      "Aumentar a corrente elétrica para reduzir perdas no sistema",
+      "Reduzir a potência transmitida para níveis mais seguros",
+      "Diminuir a resistência dos cabos de transmissão",
+      "Reduzir perdas por efeito Joule ao diminuir a corrente elétrica"
+    ],
+    "correta": 3,
+    "explicacao": "Ao elevar a tensão, a corrente diminui para a mesma potência, reduzindo perdas por aquecimento nos condutores (efeito Joule)."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Subestações",
+    "pergunta": "Qual equipamento é fundamental em uma subestação para realizar a mudança de níveis de tensão alternada?",
+    "opcoes": [
+      "Retificador de corrente contínua",
+      "Gerador síncrono de emergência",
+      "Transformador de potência",
+      "Resistor de carga variável"
+    ],
+    "correta": 2,
+    "explicacao": "O transformador de potência é o equipamento responsável por elevar ou reduzir a tensão em sistemas de corrente alternada."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Subestações",
+    "pergunta": "Por que as subestações são essenciais na etapa intermediária entre geração e consumo de energia elétrica?",
+    "opcoes": [
+      "Porque convertem energia mecânica diretamente em energia elétrica utilizável",
+      "Porque eliminam completamente perdas elétricas durante o transporte",
+      "Porque ajustam a tensão para níveis adequados de transmissão e distribuição",
+      "Porque produzem energia elétrica adicional para compensar perdas do sistema"
+    ],
+    "correta": 2,
+    "explicacao": "As subestações ajustam os níveis de tensão para permitir transporte eficiente e uso seguro da energia elétrica."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Subestações",
+    "pergunta": "Em uma subestação de distribuição, qual é o efeito esperado ao reduzir a tensão elétrica antes de chegar ao consumidor final?",
+    "opcoes": [
+      "Aumento da potência disponível nos equipamentos residenciais",
+      "Redução da corrente elétrica a zero no circuito final",
+      "Aumento das perdas por efeito Joule na rede primária",
+      "Adequação da tensão para níveis seguros de uso residencial e comercial"
+    ],
+    "correta": 3,
+    "explicacao": "A redução da tensão na distribuição garante segurança e compatibilidade com equipamentos de consumo."
+  },
+
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Turbinas",
+    "pergunta": "Qual é a função principal das turbinas hidráulicas em uma usina hidrelétrica no processo de geração de energia?",
+    "opcoes": [
+      "Armazenar energia potencial da água em reservatórios pressurizados",
+      "Converter energia elétrica da rede em energia mecânica rotacional",
+      "Dissipar energia cinética da água em forma de calor no sistema hidráulico",
+      "Converter a energia da água em movimento em energia mecânica de rotação no eixo"
+    ],
+    "correta": 3,
+    "explicacao": "As turbinas hidráulicas transformam a energia da água em movimento em energia mecânica de rotação, que será usada no gerador."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Turbinas",
+    "pergunta": "Em uma turbina hidráulica, qual grandeza física da água é mais diretamente responsável pela rotação do eixo da turbina?",
+    "opcoes": [
+      "Resistividade elétrica da água",
+      "Energia cinética associada à velocidade do fluxo",
+      "Capacitância do sistema hidráulico",
+      "Frequência de vibração do fluido em repouso"
+    ],
+    "correta": 1,
+    "explicacao": "A energia cinética da água em movimento é a principal responsável por impulsionar as pás da turbina."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Turbinas",
+    "pergunta": "Por que o projeto das pás de uma turbina hidráulica influencia diretamente a eficiência na geração de energia elétrica?",
+    "opcoes": [
+      "Porque altera o campo elétrico do gerador acoplado ao eixo",
+      "Porque interfere na pressão hidráulica sem relação com o movimento",
+      "Porque controla a transferência de momento da água para o eixo rotativo",
+      "Porque impede a conversão de energia mecânica em elétrica"
+    ],
+    "correta": 2,
+    "explicacao": "O formato das pás determina a eficiência na transferência de energia da água para o movimento rotacional da turbina."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Turbinas",
+    "pergunta": "Qual fator abaixo afeta diretamente a potência mecânica gerada por uma turbina hidráulica em operação?",
+    "opcoes": [
+      "A coloração da água no reservatório",
+      "A composição química dos minerais dissolvidos na água",
+      "A vazão de água e a altura da queda hidráulica",
+      "A frequência sonora do ambiente externo"
+    ],
+    "correta": 2,
+    "explicacao": "A potência depende principalmente da vazão e da altura de queda, que determinam a energia disponível da água."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Turbinas",
+    "pergunta": "Em um sistema hidrelétrico, o que ocorre após a turbina receber a energia da água em movimento?",
+    "opcoes": [
+      "A energia é convertida diretamente em calor e dissipada no reservatório",
+      "A água é transformada diretamente em energia elétrica sem etapas intermediárias",
+      "A energia mecânica é convertida em energia elétrica pelo gerador acoplado",
+      "O fluxo de água é interrompido e armazenado como energia potencial elétrica"
+    ],
+    "correta": 2,
+    "explicacao": "Após a turbina converter a energia da água em movimento mecânico, o gerador transforma essa energia em elétrica."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Termoelétricas",
+    "pergunta": "O que caracteriza uma usina termoelétrica a vapor no processo de geração de energia elétrica?",
+    "opcoes": [
+      "Conversão direta de energia solar em eletricidade por células fotovoltaicas",
+      "Uso de combustíveis para aquecer água e gerar vapor que aciona turbinas",
+      "Uso de vento para movimentar aerogeradores conectados ao gerador",
+      "Uso de reações nucleares para aquecer diretamente circuitos elétricos"
+    ],
+    "correta": 1,
+    "explicacao": "Usinas termoelétricas a vapor utilizam a queima de combustíveis para aquecer água, gerando vapor que movimenta turbinas conectadas a geradores."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Termoelétricas",
+    "pergunta": "Qual etapa é essencial em uma usina termoelétrica convencional antes da geração de energia elétrica no gerador?",
+    "opcoes": [
+      "Compressão direta da eletricidade em corrente alternada",
+      "Conversão de energia elétrica em energia química armazenada",
+      "Produção de vapor a partir do aquecimento de água em caldeiras",
+      "Armazenamento de energia mecânica em baterias industriais"
+    ],
+    "correta": 2,
+    "explicacao": "A etapa fundamental é o aquecimento da água em caldeiras para produzir vapor, que irá movimentar as turbinas."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Termoelétricas",
+    "pergunta": "Por que o vapor de alta pressão é importante no funcionamento de uma usina termoelétrica?",
+    "opcoes": [
+      "Porque reduz a necessidade de geradores elétricos no sistema",
+      "Porque aumenta a eficiência na transferência de energia para a turbina",
+      "Porque elimina a necessidade de combustíveis fósseis",
+      "Porque converte diretamente energia elétrica em energia térmica útil"
+    ],
+    "correta": 1,
+    "explicacao": "O vapor de alta pressão possui maior energia disponível, aumentando a eficiência na rotação das turbinas."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Termoelétricas",
+    "pergunta": "Qual fator está diretamente associado ao impacto ambiental de usinas termoelétricas baseadas em combustíveis fósseis?",
+    "opcoes": [
+      "Emissão de gases poluentes durante a combustão",
+      "Redução total de gases de efeito estufa",
+      "Ausência de qualquer tipo de rejeito atmosférico",
+      "Geração exclusiva de energia limpa sem subprodutos"
+    ],
+    "correta": 0,
+    "explicacao": "A queima de combustíveis fósseis libera gases poluentes, como CO₂, contribuindo para o efeito estufa."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Termoelétricas",
+    "pergunta": "Em uma usina termoelétrica, o que ocorre após o vapor acionar a turbina?",
+    "opcoes": [
+      "O vapor é convertido diretamente em energia elétrica sem intermediários",
+      "A energia mecânica da turbina é convertida em energia elétrica pelo gerador",
+      "A água é destruída e transformada em energia luminosa",
+      "O sistema interrompe o fluxo energético para resfriamento imediato"
+    ],
+    "correta": 1,
+    "explicacao": "Após movimentar a turbina, a energia mecânica é convertida em energia elétrica pelo gerador acoplado."
+  },
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Dieselétricas",
+    "pergunta": "O que caracteriza uma usina dieselétrica no contexto da geração de energia elétrica em sistemas isolados ou de emergência?",
+    "opcoes": [
+      "Uso da energia solar convertida por efeito fotovoltaico em corrente contínua",
+      "Uso de motores a diesel para acionar geradores elétricos por conversão mecânica",
+      "Uso da energia dos ventos em aerogeradores conectados à rede de transmissão",
+      "Uso da energia potencial da água em queda para movimentar turbinas hidráulicas"
+    ],
+    "correta": 1,
+    "explicacao": "Usinas dieselétricas utilizam motores a combustão a diesel que transformam energia química em energia mecânica, acionando geradores elétricos."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Dieselétricas",
+    "pergunta": "Em uma usina dieselétrica, qual etapa é responsável pela conversão direta da energia química do combustível em energia útil para o gerador?",
+    "opcoes": [
+      "A combustão no motor diesel que gera movimento mecânico no eixo",
+      "A transformação de energia elétrica em energia química armazenada no combustível",
+      "A indução eletromagnética no estator sem movimento do rotor",
+      "A compressão da corrente elétrica em transformadores de potência"
+    ],
+    "correta": 0,
+    "explicacao": "A combustão do diesel no motor gera energia mecânica que é transmitida ao gerador elétrico."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Dieselétricas",
+    "pergunta": "Por que usinas dieselétricas são frequentemente utilizadas em regiões isoladas ou como sistemas de backup energético?",
+    "opcoes": [
+      "Porque produzem energia com zero custo operacional após instalação",
+      "Porque dependem exclusivamente de radiação solar contínua",
+      "Porque não necessitam de combustível para funcionar",
+      "Porque possuem rápida partida e independência da rede elétrica principal"
+    ],
+    "correta": 0,
+    "explicacao": "Usinas dieselétricas são usadas em locais isolados ou emergenciais devido à sua capacidade de rápida ativação e autonomia em relação à rede."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Dieselétricas",
+    "pergunta": "Qual fator é uma desvantagem significativa das usinas dieselétricas em comparação com outras fontes de geração?",
+    "opcoes": [
+      "Baixa capacidade de resposta a variações de carga",
+      "Dependência de combustíveis fósseis e emissão de poluentes",
+      "Incapacidade de operar em sistemas isolados",
+      "Necessidade obrigatória de energia solar complementar"
+    ],
+    "correta": 0,
+    "explicacao": "Usinas dieselétricas dependem de combustíveis fósseis, o que gera custos elevados e impactos ambientais devido às emissões."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Dieselétricas",
+    "pergunta": "Em um sistema dieselétrico, o que ocorre após o motor a diesel entrar em funcionamento?",
+    "opcoes": [
+      "A energia elétrica é produzida diretamente pela combustão sem etapas intermediárias",
+      "O combustível é convertido diretamente em eletricidade sem perdas",
+      "O movimento mecânico do motor aciona um gerador que produz energia elétrica",
+      "A energia elétrica é armazenada no próprio motor para uso posterior"
+    ],
+    "correta": 2,
+    "explicacao": "O motor a diesel gera energia mecânica, que é transferida ao gerador elétrico para produção de eletricidade."
+  },
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aplicação florestal",
+    "pergunta": "Em uma área florestal remota sem acesso à rede elétrica, qual solução energética é mais adequada para garantir fornecimento contínuo de energia para um ponto de observação ambiental?",
+    "opcoes": [
+      "Uso exclusivo da rede elétrica urbana via extensão de cabos de longa distância",
+      "Sistema fotovoltaico com armazenamento em baterias para operação contínua",
+      "Utilização apenas de velas ou iluminação por combustão direta",
+      "Geração manual de energia por dispositivos mecânicos operados continuamente"
+    ],
+    "correta": 1,
+    "explicacao": "Sistemas fotovoltaicos com baterias permitem autonomia energética em locais isolados, garantindo fornecimento contínuo mesmo sem insolação imediata."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aplicação florestal",
+    "pergunta": "Em um sistema autônomo instalado em área de floresta para monitoramento climático, qual componente é essencial para manter o fornecimento de energia durante períodos noturnos ou nublados?",
+    "opcoes": [
+      "Transformador elevador de tensão conectado diretamente aos painéis",
+      "Banco de baterias para armazenamento de energia elétrica gerada durante o dia",
+      "Gerador eólico de grande porte independente da radiação solar",
+      "Rede elétrica convencional como fonte primária de backup"
+    ],
+    "correta": 1,
+    "explicacao": "As baterias armazenam energia gerada pelos painéis solares, permitindo uso contínuo mesmo na ausência de radiação solar."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aplicação florestal",
+    "pergunta": "Qual fator mais influencia a eficiência de um sistema fotovoltaico instalado em área florestal para alimentação de sensores ambientais?",
+    "opcoes": [
+      "Quantidade de folhas caindo sobre os cabos de transmissão",
+      "Disponibilidade de radiação solar e sombreamento da vegetação ao redor",
+      "Frequência de chuvas ácidas na região",
+      "Distância entre os sensores e o solo da floresta"
+    ],
+    "correta": 1,
+    "explicacao": "A eficiência depende diretamente da incidência de radiação solar e do nível de sombreamento causado pela vegetação."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aplicação florestal",
+    "pergunta": "Por que sistemas baseados apenas em geração manual de energia não são adequados para monitoramento contínuo em áreas florestais?",
+    "opcoes": [
+      "Porque exigem operação constante e não garantem fornecimento estável de energia",
+      "Porque produzem energia em excesso para sistemas pequenos",
+      "Porque geram tensão excessiva incompatível com sensores ambientais",
+      "Porque substituem completamente a necessidade de qualquer tipo de armazenamento"
+    ],
+    "correta": 0,
+    "explicacao": "Geração manual depende de esforço humano contínuo, o que não é viável para operação ininterrupta."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Aplicação florestal",
+    "pergunta": "Em sistemas de energia para aplicações florestais isoladas, qual é a principal vantagem da combinação entre painéis solares e baterias?",
+    "opcoes": [
+      "Eliminação total da necessidade de conversão de energia",
+      "Dependência exclusiva de combustíveis fósseis para estabilidade",
+      "Capacidade de operar apenas durante o dia sem necessidade de armazenamento",
+      "Autonomia energética com armazenamento e fornecimento contínuo mesmo sem sol"
+    ],
+    "correta": 3,
+    "explicacao": "A combinação permite geração durante o dia e armazenamento para uso contínuo, garantindo autonomia energética."
+  },
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Sistema híbrido",
+    "pergunta": "Um sistema híbrido solar + diesel é viável em aplicações de geração isolada. Qual é a principal justificativa técnica para sua adoção em sistemas elétricos não interligados à rede?",
+    "opcoes": [
+      "Eliminação total da necessidade de armazenamento de energia elétrica",
+      "Maior confiabilidade do suprimento energético ao combinar fonte intermitente e fonte despachável",
+      "Obrigatoriedade de uso exclusivo em áreas urbanas densamente povoadas",
+      "Substituição completa de qualquer forma de controle de carga elétrica"
+    ],
+    "correta": 1,
+    "explicacao": "Sistemas híbridos aumentam a confiabilidade ao combinar a intermitência da solar com a estabilidade do diesel."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Sistema híbrido",
+    "pergunta": "Em um sistema híbrido solar-diesel com controle automático de carga, qual estratégia operacional é mais eficiente para reduzir o consumo de combustível fóssil?",
+    "opcoes": [
+      "Operar o gerador diesel continuamente em carga máxima independentemente da geração solar",
+      "Desligar completamente o sistema solar durante o dia para evitar instabilidade",
+      "Priorizar a geração fotovoltaica e acionar o diesel apenas como suporte em déficit energético",
+      "Manter o diesel como fonte primária mesmo em períodos de alta irradiação solar"
+    ],
+    "correta": 2,
+    "explicacao": "A estratégia eficiente é priorizar a energia solar e usar o diesel apenas como backup."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Sistema híbrido",
+    "pergunta": "Qual componente é essencial em um sistema híbrido solar-diesel para garantir operação eficiente e automática entre as fontes?",
+    "opcoes": [
+      "Transformador isolador de alta frequência sem controle eletrônico",
+      "Controlador híbrido de energia (EMS) responsável pelo gerenciamento das fontes",
+      "Gerador síncrono operando em regime fixo sem regulação",
+      "Banco de resistores utilizado como fonte primária de energia estabilizada"
+    ],
+    "correta": 1,
+    "explicacao": "O EMS coordena a operação entre solar e diesel, otimizando o uso das fontes."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Sistema híbrido",
+    "pergunta": "Qual é uma desvantagem comum em sistemas híbridos solar-diesel quando comparados a sistemas puramente renováveis?",
+    "opcoes": [
+      "Eliminação completa da necessidade de qualquer controle de carga",
+      "Dependência parcial de combustível fóssil, reduzindo a sustentabilidade global",
+      "Impossibilidade de operar em locais isolados sem infraestrutura elétrica",
+      "Incapacidade total de integração com sistemas de armazenamento"
+    ],
+    "correta": 1,
+    "explicacao": "O uso de diesel reduz a sustentabilidade devido à dependência de combustível fóssil."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Sistema híbrido",
+    "pergunta": "Em um sistema híbrido, o que ocorre quando há excesso de geração solar em relação à demanda instantânea?",
+    "opcoes": [
+      "Toda energia excedente é obrigatoriamente dissipada em forma de calor resistivo",
+      "O sistema interrompe totalmente a geração solar para estabilização da rede",
+      "A energia excedente pode ser armazenada em baterias ou usada para reduzir o uso do diesel",
+      "A energia solar é convertida automaticamente em energia mecânica dissipada"
+    ],
+    "correta": 2,
+    "explicacao": "O excedente pode ser armazenado ou usado para reduzir o acionamento do gerador diesel."
+  },
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Transmissão e distribuição",
+    "pergunta": "Qual é a principal diferença técnica entre os sistemas de transmissão e distribuição em um sistema elétrico de potência?",
+    "opcoes": [
+      "A transmissão é responsável pela geração de energia enquanto a distribuição realiza o armazenamento",
+      "A transmissão opera em alta tensão transportando energia a longas distâncias, enquanto a distribuição reduz a tensão para consumo final",
+      "A distribuição ocorre apenas entre usinas geradoras sem ligação com consumidores",
+      "A transmissão funciona em baixa tensão e a distribuição em alta tensão para estabilizar o sistema"
+    ],
+    "correta": 1,
+    "explicacao": "A transmissão transporta energia em alta tensão por longas distâncias e a distribuição reduz a tensão para o consumidor final."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Transmissão e distribuição",
+    "pergunta": "Por que sistemas de transmissão elétrica utilizam tensões elevadas ao invés de tensões baixas durante o transporte de energia?",
+    "opcoes": [
+      "Para aumentar a corrente e reduzir perdas por aquecimento nos cabos",
+      "Para reduzir a corrente elétrica e minimizar perdas por efeito Joule",
+      "Para aumentar a resistência elétrica dos condutores",
+      "Para eliminar a necessidade de transformadores ao longo da rede"
+    ],
+    "correta": 1,
+    "explicacao": "Tensões elevadas reduzem a corrente para a mesma potência, diminuindo perdas por efeito Joule."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Transmissão e distribuição",
+    "pergunta": "Qual equipamento é essencial para integrar as etapas de transmissão e distribuição em sistemas elétricos?",
+    "opcoes": [
+      "Gerador síncrono localizado nas residências consumidoras",
+      "Transformador de potência para adequação de níveis de tensão",
+      "Resistor de carga para dissipação total da energia transmitida",
+      "Bateria de armazenamento central como única fonte intermediária"
+    ],
+    "correta": 1,
+    "explicacao": "Os transformadores ajustam os níveis de tensão entre transmissão e distribuição."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Transmissão e distribuição",
+    "pergunta": "Em um sistema elétrico, qual é uma característica típica das redes de distribuição urbana em comparação às linhas de transmissão?",
+    "opcoes": [
+      "Operam em tensões muito elevadas para reduzir perdas a longas distâncias",
+      "Transportam energia exclusivamente entre usinas geradoras",
+      "Apresentam menor tensão e maior proximidade com o consumidor final",
+      "Funcionam apenas em corrente contínua de alta potência industrial"
+    ],
+    "correta": 3,
+    "explicacao": "As redes de distribuição operam em tensões menores e estão próximas ao consumidor final."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Transmissão e distribuição",
+    "pergunta": "O que ocorre com a energia elétrica ao passar da etapa de transmissão para a etapa de distribuição?",
+    "opcoes": [
+      "A energia é convertida em energia química armazenada",
+      "A tensão é aumentada para facilitar o consumo industrial",
+      "A tensão é reduzida para níveis adequados de uso residencial e comercial",
+      "A energia é completamente dissipada antes de chegar ao consumidor"
+    ],
+    "correta": 2,
+    "explicacao": "Na distribuição, a tensão é reduzida para níveis seguros e utilizáveis pelos consumidores."
+  },
+
+
+
+
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia renovável",
+    "pergunta": "O que caracteriza tecnicamente uma fazenda solar ou eólica no contexto do sistema elétrico moderno de geração distribuída ou centralizada?",
+    "opcoes": [
+      "Áreas destinadas ao cultivo agrícola intensivo com irrigação elétrica automatizada",
+      "Complexos industriais voltados exclusivamente ao armazenamento de combustíveis fósseis",
+      "Instalações de geração de energia elétrica a partir de fontes renováveis como radiação solar e vento",
+      "Sistemas de reservatórios hidráulicos utilizados para regular apenas o fluxo de água potável"
+    ],
+    "correta": 2,
+    "explicacao": "Fazendas solares e eólicas são instalações destinadas à geração de energia elétrica a partir de fontes renováveis como sol e vento."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia renovável",
+    "pergunta": "Qual é o principal objetivo da instalação de grandes fazendas solares e eólicas em sistemas elétricos interligados?",
+    "opcoes": [
+      "Substituir completamente toda forma de transmissão elétrica existente",
+      "Aumentar a dependência exclusiva de combustíveis fósseis para estabilidade da rede",
+      "Reduzir a necessidade de qualquer tipo de controle de tensão no sistema elétrico",
+      "Aumentar a participação de fontes renováveis na matriz energética com geração em larga escala"
+    ],
+    "correta": 3,
+    "explicacao": "O objetivo é aumentar a participação de fontes renováveis na matriz energética por meio de geração em grande escala."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia renovável",
+    "pergunta": "Qual fator mais influencia a variabilidade da geração em fazendas eólicas quando integradas ao sistema elétrico?",
+    "opcoes": [
+      "A resistência elétrica dos cabos de transmissão associados ao parque eólico",
+      "A velocidade e constância dos ventos na região de instalação",
+      "A cor das pás dos aerogeradores durante operação",
+      "A temperatura dos transformadores de distribuição urbana"
+    ],
+    "correta": 1,
+    "explicacao": "A geração eólica depende diretamente da velocidade e constância dos ventos."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia renovável",
+    "pergunta": "Por que fazendas solares geralmente são instaladas em regiões com alta incidência de radiação solar?",
+    "opcoes": [
+      "Para reduzir a necessidade de inversores no sistema elétrico",
+      "Porque a produção de energia depende diretamente da intensidade da radiação solar incidente",
+      "Para eliminar a necessidade de transformadores de tensão",
+      "Porque a energia solar não sofre variação ao longo do dia nessas regiões"
+    ],
+    "correta": 1,
+    "explicacao": "A geração fotovoltaica depende diretamente da intensidade da radiação solar incidente."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia renovável",
+    "pergunta": "Qual é uma característica comum entre fazendas solares e eólicas em termos de integração ao sistema elétrico?",
+    "opcoes": [
+      "Operam exclusivamente de forma isolada sem conexão com a rede elétrica",
+      "Dependem de combustíveis fósseis como fonte primária de energia",
+      "Não necessitam de qualquer tipo de controle de potência ou tensão",
+      "Exigem sistemas de conversão e controle para integração à rede elétrica"
+    ],
+    "correta": 3,
+    "explicacao": "Fazendas renováveis exigem sistemas de conversão e controle para integração à rede elétrica."
+  },
+
+
+
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia em áreas remotas",
+    "pergunta": "Para uma torre de monitoramento instalada no interior de uma floresta sem acesso à rede elétrica, qual solução energética garante maior autonomia operacional contínua?",
+    "opcoes": [
+      "Extensão direta da rede elétrica urbana com cabos de longa distância",
+      "Sistema solar fotovoltaico com banco de baterias para armazenamento",
+      "Uso exclusivo de pilhas descartáveis substituídas periodicamente",
+      "Gerador manual operado continuamente por intervenção humana"
+    ],
+    "correta": 1,
+    "explicacao": "Sistemas solares com baterias permitem autonomia energética contínua em locais isolados."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia em áreas remotas",
+    "pergunta": "Em um sistema fotovoltaico instalado em área florestal isolada, qual fator é determinante para o correto dimensionamento do banco de baterias?",
+    "opcoes": [
+      "Quantidade de espécies vegetais ao redor da instalação",
+      "Consumo energético diário dos equipamentos e autonomia desejada sem sol",
+      "Distância entre a torre e o nível do solo da floresta",
+      "Velocidade média do vento na região durante o inverno"
+    ],
+    "correta": 2,
+    "explicacao": "O dimensionamento de baterias depende do consumo e do tempo de autonomia necessário sem geração solar."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia em áreas remotas",
+    "pergunta": "Por que sistemas baseados exclusivamente em geração manual não são adequados para alimentação contínua de sensores em áreas florestais?",
+    "opcoes": [
+      "Porque produzem tensão excessiva incompatível com eletrônicos sensíveis",
+      "Porque exigem intervenção humana constante, inviabilizando operação ininterrupta",
+      "Porque geram apenas corrente contínua sem possibilidade de regulação",
+      "Porque não permitem qualquer forma de armazenamento energético"
+    ],
+    "correta": 0,
+    "explicacao": "Geração manual depende de ação contínua humana, o que inviabiliza funcionamento permanente."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia em áreas remotas",
+    "pergunta": "Qual fator ambiental afeta simultaneamente a eficiência de um sistema solar com baterias em ambiente florestal?",
+    "opcoes": [
+      "Tipo de rocha do solo e profundidade das raízes das árvores",
+      "Sombreamento da vegetação e variabilidade da radiação solar incidente",
+      "Altura média das árvores e umidade do solo",
+      "Pressão atmosférica local e densidade de insetos na região"
+    ],
+    "correta": 3,
+    "explicacao": "A eficiência depende principalmente da radiação solar e do sombreamento causado pela vegetação."
+  },
+  {
+    "materia": "Eletricidade Aplicada",
+    "assunto": "Energia em áreas remotas",
+    "pergunta": "Em uma região com alta incidência de sol e vento, qual configuração energética é mais adequada para garantir fornecimento contínuo com redução de dependência de uma única fonte?",
+    "opcoes": [
+      "Uso exclusivo de geradores a diesel para estabilidade total da carga",
+      "Sistema híbrido com fontes solar e eólica operando de forma complementar",
+      "Dependência exclusiva de grandes hidrelétricas interligadas à rede nacional",
+      "Uso apenas de sistemas manuais de geração com armazenamento limitado"
+    ],
+    "correta": 2,
+    "explicacao": "Sistemas híbridos aumentam confiabilidade ao combinar fontes renováveis complementares."
+  }
+
+]
+
+
+// ASSUNTOS CONCLUÍDOS
+// Chaves das matérias em minúsculo para padronização
+// true = concluído, false = não concluído
+
+const assuntosConcluidos={}
+
+//"História 6º Ano": {
+//"História: conceito e fontes históricas": false,
+//"Tempo histórico e calendário": false
+//}
+
+// ==========================
+// REFERÊNCIAS DE ELEMENTOS HTML
+
+const loginDiv=document.getElementById("login")
+const menuDiv=document.getElementById("menu")
+const quizDiv=document.getElementById("quiz")
+const btnEntrar=document.getElementById("btnEntrar")
+const btnConfirmar=document.getElementById("btnConfirmar")
+const btnProxima=document.getElementById("btnProxima")
+const btnVoltar=document.getElementById("btnVoltar")
+
+// ==========================
+// EVENTOS DOS BOTÕES
+
+btnEntrar.addEventListener("click", entrar)
+btnConfirmar.addEventListener("click", confirmarResposta)
+btnProxima.addEventListener("click", proxima)
+btnVoltar.addEventListener("click", voltarMenu)
+
+
+// ==========================
+// FUNÇÃO ENTRAR
+
+function entrar(){
+  let nome=document.getElementById("nomeUsuario").value.trim()
+  if(nome===""){alert("Digite seu nome"); return}
+  usuario=nome
+  localStorage.setItem("usuario-" + QUIZ_ID, nome)
+  loginDiv.style.display="none"
+  menuDiv.style.display="block"
+  criarMenuMaterias()
+}
+
+// ==========================
+// CRIAR MENU DE MATÉRIAS
+
+function criarMenuMaterias(){
+
+
+  menuDiv.innerHTML = "<h1>Quiz de Eletricidade Aplicada</h1><h2>Olá " + usuario + "</h2><h2>Escolha a matéria</h2>"
+  let materias = [...new Set(banco.map(p => p.materia))]
+
+  materias.forEach(m => {
+    let botao = document.createElement("div")
+    botao.className = "temaBtn"
+
+    // Calcular progresso total da matéria (incluindo assuntos concluídos)
+    let totalQuestoesMateria = banco.filter(p => p.materia === m).length
+    let acertosUsuario = 0
+    let assuntosDaMateria = [...new Set(banco.filter(p => p.materia === m).map(p => p.assunto))]
+
+    assuntosDaMateria.forEach(a => {
+      let chave = QUIZ_ID + "-" + m + "-" + a
+      let salvo = localStorage.getItem(chave)
+
+      // Somar acertos salvos
+      if (salvo) {
+        let dados = JSON.parse(salvo)
+        acertosUsuario += dados.acertos || 0
+      }
+
+      // Somar assuntos concluídos manualmente
+      if (assuntosConcluidos[m] && assuntosConcluidos[m][a]) {
+        let totalQuestoesAssunto = banco.filter(p => p.materia === m && p.assunto === a).length
+        acertosUsuario += totalQuestoesAssunto
+      }
+    })
+
+    let porcentagem = (totalQuestoesMateria > 0) ? (acertosUsuario / totalQuestoesMateria) * 100 : 0
+    botao.title = "Você acertou " + acertosUsuario + " de " + totalQuestoesMateria + " questões desta matéria"
+
+    botao.innerHTML =
+      "<div style='font-size:22px'>" + m + "</div>" +
+      "<div style='font-size:16px;opacity:0.8'>Progresso: " + acertosUsuario + " de " + totalQuestoesMateria + " questões corretas</div>" +
+      "<div class='progressoAssunto'><div class='barraInterna' style='width:" + porcentagem + "%'></div></div>"
+
+    botao.onclick = function() {
+      materiaSelecionada = m
+      Array.from(document.querySelectorAll(".temaBtn")).forEach(b => b.classList.remove("selecionadaMenu"))
+      botao.classList.add("selecionadaMenu")
+    }
+
+    menuDiv.appendChild(botao)
+  })
+
+  // Botão confirmar matéria
+  let confirmar = document.createElement("button")
+  confirmar.innerText = "Confirmar matéria"
+  confirmar.onclick = function() {
+    if (!materiaSelecionada) {
+      alert("Selecione uma matéria")
+      return
+    }
+    criarMenuAssuntos(materiaSelecionada)
+  }
+  menuDiv.appendChild(confirmar)
+
+  // Botão zerar progresso
+  let zerarUsuarioBtn=document.createElement("button")
+  zerarUsuarioBtn.innerText="Zerar usuário"
+  zerarUsuarioBtn.onclick=function(){
+    if(confirm("ATENÇÃO: você perderá o nome e todo o progresso deste quiz e terá que se registrar novamente. Deseja continuar?")){
+      for(let key in localStorage){
+        if(key.startsWith(QUIZ_ID + "-") || key === "usuario-" + QUIZ_ID){
+          localStorage.removeItem(key)
+        }
+      }
+      usuario=""
+      menuDiv.style.display="none"
+      loginDiv.style.display="block"
+      document.getElementById("nomeUsuario").value=""
+    }
+  }
+  menuDiv.appendChild(zerarUsuarioBtn)
+}
+
+// ==========================
+// CRIAR MENU DE ASSUNTOS
+
+function criarMenuAssuntos(materia){
+
+
+  menuDiv.innerHTML="<h1>Quiz de Eletricidade Aplicada</h1><h2>"+materia+"</h2><p>Escolha o assunto</p>"
+  let assuntos=[...new Set(banco.filter(p=>p.materia===materia).map(p=>p.assunto))]
+
+  assuntos.forEach(a=>{
+    let botao=document.createElement("div")
+    botao.className="temaBtn"
+
+    let chave=QUIZ_ID + "-" + materia + "-" + a
+    let salvo=localStorage.getItem(chave)
+if (assuntosConcluidos[materia] && assuntosConcluidos[materia][a]) {
+  localStorage.removeItem(chave)
+}
+
+    let totalQuestoes=banco.filter(p=>p.materia===materia && p.assunto===a).length
+    let respondidas=0
+    let acertos=0
+    let porcentagem=0
+    let progressoTexto="Respondidas: 0 de "+totalQuestoes+" | Acertos: 0"
+
+    if(salvo){
+      let dados=JSON.parse(salvo)
+      acertos=dados.acertos || 0
+      respondidas=dados.respondidasLista ? dados.respondidasLista.length : 0
+      porcentagem=(acertos/totalQuestoes)*100
+      progressoTexto="Respondidas: "+respondidas+" de "+totalQuestoes+" | Acertos: "+acertos
+    }
+
+    // MARCAR ASSUNTO CONCLUÍDO
+
+if (assuntosConcluidos[materia] && assuntosConcluidos[materia][a]) {
+  porcentagem = 100
+  progressoTexto = "Respondidas: " + totalQuestoes + " de " + totalQuestoes + " | Acertos: " + totalQuestoes
+}
+
+    botao.innerHTML=
+      "<div style='font-size:22px'>"+a+"</div>"+
+      "<div style='font-size:16px;opacity:0.8'>"+progressoTexto+"</div>"+
+      "<div class='progressoAssunto'><div class='barraInterna' style='width:"+porcentagem+"%'></div></div>"
+
+    botao.onclick=function(){
+
+if (assuntosConcluidos[materia] && assuntosConcluidos[materia][a]) {
+  alert("Este assunto já foi concluído.")
+  return
+}
+      assuntoSelecionado=a
+      Array.from(document.querySelectorAll(".temaBtn")).forEach(b=>b.classList.remove("selecionadaMenu"))
+      botao.classList.add("selecionadaMenu")
+    }
+    menuDiv.appendChild(botao)
+  })
+
+  // Botão iniciar quiz
+  let iniciar=document.createElement("button")
+
+
+  iniciar.innerText="Iniciar Quiz de "
+
+  iniciar.onclick=function(){
+    if(!assuntoSelecionado){alert("Selecione um assunto");return}
+    iniciarQuiz(materiaSelecionada,assuntoSelecionado)
+  }
+  menuDiv.appendChild(iniciar)
+
+  // Botão voltar
+  let voltar=document.createElement("button")
+  voltar.innerText="Voltar para matérias"
+  voltar.onclick=function(){criarMenuMaterias()}
+  menuDiv.appendChild(voltar)
+}
+
+// ==========================
+// FUNÇÕES DE QUIZ
+
+function iniciarQuiz(materia,assunto){
+  perguntas=banco.filter(p=>p.materia===materia && p.assunto===assunto)
+  atual=0
+  pontos=0
+  erros=[]
+  menuDiv.style.display="none"
+  quizDiv.style.display="block"
+  carregar()
+}
+
+function carregar(){
+  let p=perguntas[atual]
+  document.getElementById("pergunta").innerText=p.pergunta
+  document.getElementById("tema").innerText=p.materia+" → "+p.assunto
+
+  for(let i=0;i<4;i++){
+    let op=document.getElementById("op"+i)
+    op.innerText=p.opcoes[i]
+    op.className="opcao"
+    op.onclick=function(){
+      opcaoSelecionada=i
+      Array.from(document.querySelectorAll(".opcao")).forEach(o=>o.classList.remove("selecionada"))
+      op.classList.add("selecionada")
+    }
+  }
+
+  document.getElementById("placar").innerText="Pergunta "+(atual+1)+" de "+perguntas.length+" | Pontos: "+pontos
+  document.getElementById("progresso").style.width=(atual/perguntas.length*100)+"%"
+  document.getElementById("explicacao").innerText=""
+  btnConfirmar.style.display="block"
+  btnProxima.style.display="none"
+  respondido=false
+  opcaoSelecionada=null
+}
+
+function confirmarResposta(){
+  if(opcaoSelecionada==null){alert("Selecione uma opção");return}
+  responder(opcaoSelecionada)
+  btnConfirmar.style.display="none"
+  btnProxima.style.display="block"
+}
+
+function responder(i){
+  if(respondido) return
+  respondido = true
+  let p = perguntas[atual]
+  let correta = p.correta
+
+  if(i == correta){
+    document.getElementById("op"+i).classList.add("correta")
+    pontos++
+
+  } else {
+    document.getElementById("op"+i).classList.add("errada")
+    document.getElementById("op"+correta).classList.add("correta")
+    erros.push(atual+1)
+  }
+  document.getElementById("explicacao").innerText = "Explicação: " + p.explicacao
+
+  let chave = QUIZ_ID + "-" + materiaSelecionada + "-" + assuntoSelecionado
+  let progresso = localStorage.getItem(chave)
+    ? JSON.parse(localStorage.getItem(chave))
+    : {acertos:0, total:perguntas.length, questoesAcertadas:[], respondidasLista:[]}
+
+if(i == correta){
+  // Caso acerte
+  if(!progresso.questoesAcertadas.includes(atual)){
+    progresso.acertos++
+    progresso.questoesAcertadas.push(atual)
+  }
+} else {
+  // Caso erre
+  // Se a questão já estava marcada como acertada, remover o acerto
+  let index = progresso.questoesAcertadas.indexOf(atual)
+  if(index !== -1){
+    progresso.questoesAcertadas.splice(index,1) // remove da lista de acertadas
+    progresso.acertos-- // subtrai um ponto
+  }
+}
+
+// Registrar que a questão foi respondida
+if(!progresso.respondidasLista.includes(atual)){
+  progresso.respondidasLista.push(atual)
+}
+
+  localStorage.setItem(chave, JSON.stringify(progresso))
+}
+
+if (assuntosConcluidos[materiaSelecionada] && assuntosConcluidos[materiaSelecionada][assuntoSelecionado]) {
+  localStorage.removeItem(chave)
+}
+
+function proxima(){
+  atual++
+  if(atual>=perguntas.length){
+    let acertos=pontos
+    let total=perguntas.length
+    let errosTotal=total-acertos
+    let listaErros=(erros.length>0) ? "\nQuestões erradas: " + erros.join(", ") : "\nVocê não errou nenhuma questão!"
+    alert("Resultado final\n\nAcertos: "+acertos+"\nErros: "+errosTotal+listaErros+"\n\nPressione OK para voltar ao menu")
+    quizDiv.style.display="none"
+    menuDiv.style.display="block"
+    criarMenuAssuntos(materiaSelecionada)
+    return
+  }
+  carregar()
+}
+
+function voltarMenu(){
+  quizDiv.style.display="none"
+  menuDiv.style.display="block"
+  criarMenuMaterias()
+}
+
+// ==========================
+// CARREGAR USUÁRIO SALVO
+
+window.onload=function(){
+  let nomeSalvo = localStorage.getItem("usuario-" + QUIZ_ID)
+  if(nomeSalvo){
+    usuario=nomeSalvo
+    loginDiv.style.display="none"
+    menuDiv.style.display="block"
+    criarMenuMaterias()
+  }
+}
+
+if(!assuntosConcluidos[materiaSelecionada]){
+  assuntosConcluidos[materiaSelecionada] = {}
+}
+
+if(pontos >= perguntas.length){
+  assuntosConcluidos[materiaSelecionada][assuntoSelecionado] = true
+}
+
+</script>
+</body>
+</html>
