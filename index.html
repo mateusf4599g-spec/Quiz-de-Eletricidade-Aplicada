@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
 <title>Quiz de Eletricidade Aplicada</title>
 
 <style>
@@ -70,7 +69,7 @@ h1,h2{text-align:center;}
 
 /* PERGUNTAS E OPÇÕES */
 .pergunta{
-  font-size:24px;
+  font-size:30px;
   margin-bottom:20px;
 }
 
@@ -80,7 +79,7 @@ h1,h2{text-align:center;}
   margin:10px 0;
   border-radius:8px;
   cursor:pointer;
-  font-size:20px;
+  font-size:30px;
   border:3px solid #1f2937;
 }
 
@@ -90,14 +89,14 @@ h1,h2{text-align:center;}
 
 /* BOTOES GERAIS */
 button{
-  margin-top:30px;
+  margin-top:45px;
   padding:14px;
   width:100%;
   border:none;
   background:#2563eb;
   color:white;
   border-radius:8px;
-  font-size:18px;
+  font-size:24px;
   cursor:pointer;
 }
 
@@ -237,7 +236,6 @@ let banco=[
     "correta": 2,
     "explicacao": "Em um campo elétrico uniforme, a diferença de potencial é dada pelo produto do campo elétrico pela distância: V = E·d."
   },
-
 
 
   {
@@ -2414,15 +2412,6 @@ let banco=[
   }
 
 
-
-
-
-
-
-
-
-
-
 ]
 
 
@@ -2456,7 +2445,6 @@ btnConfirmar.addEventListener("click", confirmarResposta)
 btnProxima.addEventListener("click", proxima)
 btnVoltar.addEventListener("click", voltarMenu)
 
-
 // ==========================
 // FUNÇÃO ENTRAR
 
@@ -2474,7 +2462,6 @@ function entrar(){
 // CRIAR MENU DE MATÉRIAS
 
 function criarMenuMaterias(){
-
 
   menuDiv.innerHTML = "<h1>Quiz de Eletricidade Aplicada</h1><h2>Olá " + usuario + "</h2><h2>Escolha a matéria</h2>"
   let materias = [...new Set(banco.map(p => p.materia))]
@@ -2558,7 +2545,6 @@ function criarMenuMaterias(){
 
 function criarMenuAssuntos(materia){
 
-
   menuDiv.innerHTML="<h1>Quiz de Eletricidade Aplicada</h1><h2>"+materia+"</h2><p>Escolha o assunto</p>"
   let assuntos=[...new Set(banco.filter(p=>p.materia===materia).map(p=>p.assunto))]
 
@@ -2615,7 +2601,7 @@ if (assuntosConcluidos[materia] && assuntosConcluidos[materia][a]) {
   let iniciar=document.createElement("button")
 
 
-  iniciar.innerText="Iniciar Quiz de Eletricidade Aplicada"
+  iniciar.innerText="Iniciar Quiz de "
 
   iniciar.onclick=function(){
     if(!assuntoSelecionado){alert("Selecione um assunto");return}
